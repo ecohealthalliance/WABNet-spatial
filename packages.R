@@ -9,10 +9,10 @@
 library(targets)
 library(tarchetypes)
 library(tidyverse)
-library(here)
+#library(here)
 library(knitr)
 library(rmarkdown)
-library(paws)
+#library(paws)
 library(conflicted)
 
 ################################################################################
@@ -24,9 +24,9 @@ library(conflicted)
 #
 ################################################################################
 
-library(tflow)
-library(fnmate)
-library(containerTemplateUtils) 
-library(dotenv)
-library(usethis)
-library(kableExtra)
+# library(tflow)
+# library(fnmate)
+# library(containerTemplateUtils) 
+# library(dotenv)
+# library(usethis)
+# library(kableExtra)
