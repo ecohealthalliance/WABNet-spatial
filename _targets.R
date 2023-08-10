@@ -15,26 +15,40 @@ for (f in list.files(here::here("R"), full.names = TRUE)) source (f)
 
 ## Data input
 data_input_targets <- tar_plan(
-  ## Example data input target/s; delete and replace with your own data input
-  ## targets
+  tar_file(CoV_species_file, "data/Habitat info - CoV+ Western Asia bat species - updated 29 June 2023.csv"),
+  tar_file(WABNet_coords_file, "data/GPS coordinates for WABNet captured species.csv"),
+  # https://figshare.com/articles/dataset/Metadata_for_DarkCideS_1_0_a_global_database_for_bats_in_karsts_and_caves/16413405?file=34091939
+  tar_file(darkcides_file, "data/DarkCideS_v4_dataset 2.csv"),
   
-  targets::tar_target("example_target",create_example_target(x = TRUE))
+  CoV_species = read.csv(CoV_species_file, na.strings = c("NA", "n/a")),
+  WABNet_coords = read.csv(WABNet_coords_file, na.strings = c("NA", "n/a")),
+  darkcides = read.csv(darkcides_file, na.strings = c("N/A"))
 )
 
 
 ## Data processing
 data_processing_targets <- tar_plan(
-  ## Example data processing target/s; delete and replace with your own data
-  ## processing targets
+  CoV_species_names = CoV_species$Species,
+  occs_df = get_occs(species_names = CoV_species_names, 
+                     sources = c("gbif", "vertnet"), 
+                     limit = 30000),
+  occs_cc = clean_occs(occs_df, WABNet_coords, darkcides, CoV_species_names),
+  occs_thinned = thin_occs(occs_cc),
   
+  #species_counts = occs_cc %>% group_by(name) %>% dplyr::summarise(n = n()),
+  
+  occs_ENM = occs_thinned %>% 
+    group_by(name) %>%
+    mutate(n_individ = n()) %>%
+    filter(n_individ > 40) %>%
+    ungroup()
+
 )
 
 
 ## Analysis
 analysis_targets <- tar_plan(
-  ## Example analysis target/s; delete and replace with your own analysis
-  ## targets
- 
+
 )
 
 ## Outputs
