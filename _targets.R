@@ -9,7 +9,11 @@ suppressPackageStartupMessages(source("packages.R"))
 for (f in list.files(here::here("R"), full.names = TRUE)) source (f)
 
 # Set build options ------------------------------------------------------------
-
+tar_option_set(
+  resources = tar_resources(
+    qs = tar_resources_qs(preset = "fast")),
+  format = "qs"
+)
 
 # Groups of targets ------------------------------------------------------------
 
@@ -20,6 +24,26 @@ data_input_targets <- tar_plan(
   # https://figshare.com/articles/dataset/Metadata_for_DarkCideS_1_0_a_global_database_for_bats_in_karsts_and_caves/16413405?file=34091939
   tar_file(darkcides_file, "data/DarkCideS_v4_dataset 2.csv"),
   
+  # geodata::worldclim_global(var = "bio", res = 0.5, path = "data/")
+  tar_file(bio1_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_1.tif"),
+  tar_file(bio4_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_4.tif"),
+  tar_file(bio12_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_12.tif"),
+  tar_file(bio15_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_15.tif"),
+  
+  #geodata::worldclim_global(var = "bio", res = 2.5, path = "data/")
+  tar_file(bio1_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_1.tif"),
+  tar_file(bio4_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_4.tif"),
+  tar_file(bio12_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_12.tif"),
+  tar_file(bio15_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_15.tif"),
+  
+  
+  # https://figshare.com/articles/dataset/Harmonization_of_DMSP_and_VIIRS_nighttime_light_data_from_1992-2018_at_the_global_scale/9828827/7
+  tar_file(ntl_file, "data/Harmonized_DN_NTL_2021_simVIIRS.tif"),
+  
+  # https://download.bgr.de/bgr/grundwasser/whymap/shp/WHYMAP_WOKAM_v1.zip
+  # https://www.whymap.org/whymap/EN/Maps_Data/Wokam/wokam_node_en.html
+  tar_file(karst_file, "data/WHYMAP_WOKAM/shp/whymap_karst__v1_poly.shp"),
+  
   CoV_species = read.csv(CoV_species_file, na.strings = c("NA", "n/a")),
   WABNet_coords = read.csv(WABNet_coords_file, na.strings = c("NA", "n/a")),
   darkcides = read.csv(darkcides_file, na.strings = c("N/A"))
@@ -28,6 +52,18 @@ data_input_targets <- tar_plan(
 
 ## Data processing
 data_processing_targets <- tar_plan(
+  
+  # 30s resolution
+  # warning: creates a 11+gb raster
+  # env_stack = terra::wrap(make_stack(bio1_30s_file, bio4_30s_file, 
+  #                                    bio12_30s_file, bio15_30s_file, karst_file, 
+  #                                    ntl_file)),
+  
+  # 2.5 min resolution
+  env_stack = terra::wrap(make_stack(bio1_2.5m_file, bio4_2.5m_file,
+                                     bio12_2.5m_file, bio15_2.5m_file,
+                                     karst_file, ntl_file)),
+    
   CoV_species_names = CoV_species$Species,
   occs_df = get_occs(species_names = CoV_species_names, 
                      sources = c("gbif", "vertnet"), 
@@ -35,20 +71,33 @@ data_processing_targets <- tar_plan(
   occs_cc = clean_occs(occs_df, WABNet_coords, darkcides, CoV_species_names),
   occs_thinned = thin_occs(occs_cc),
   
-  #species_counts = occs_cc %>% group_by(name) %>% dplyr::summarise(n = n()),
+  species_for_enm = occs_cc %>% 
+    group_by(name) %>% 
+    dplyr::summarise(n = n()) %>% 
+    filter(n > 40) %>% 
+    pull(name),
   
   occs_ENM = occs_thinned %>% 
-    group_by(name) %>%
-    mutate(n_individ = n()) %>%
-    filter(n_individ > 40) %>%
-    ungroup()
+    filter(name %in% species_for_enm)
 
 )
 
 
 ## Analysis
 analysis_targets <- tar_plan(
-
+  
+  e_Misc = build_sdm(species = "Miniopterus schreibersii", occs = occs_ENM, env_stack),
+  # e_Mybl = build_sdm(species = "Myotis blythii", occs = occs_ENM, env_stack),
+  # e_Myem = build_sdm(species = "Myotis emarginatus", occs = occs_ENM, env_stack),
+  # e_Mymy = build_sdm(species = "Myotis myotis", occs = occs_ENM, env_stack),
+  # e_Piku = build_sdm(species = "Pipistrellus kuhlii", occs = occs_ENM, env_stack),
+  # e_Rhbl = build_sdm(species = "Rhinolophus blasii", occs = occs_ENM, env_stack),
+  # e_Rheu = build_sdm(species = "Rhinolophus euryale", occs = occs_ENM, env_stack),
+  # e_Rhfe = build_sdm(species = "Rhinolophus ferrumequinum", occs = occs_ENM, env_stack),
+  # e_Rhmi = build_sdm(species = "Rhinopoma microphyllum", occs = occs_ENM, env_stack),
+  # e_Roae = build_sdm(species = "Rousettus aegyptiacus", occs = occs_ENM, env_stack),
+  # e_Role = build_sdm(species = "Rousettus leschenaultii", occs = occs_ENM, env_stack),
+  # e_Sche = build_sdm(species = "Scotophilus heathii", occs = occs_ENM, env_stack)
 )
 
 ## Outputs
