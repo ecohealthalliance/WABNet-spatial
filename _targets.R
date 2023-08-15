@@ -24,6 +24,8 @@ data_input_targets <- tar_plan(
   # https://figshare.com/articles/dataset/Metadata_for_DarkCideS_1_0_a_global_database_for_bats_in_karsts_and_caves/16413405?file=34091939
   tar_file(darkcides_file, "data/DarkCideS_v4_dataset 2.csv"),
   
+  tar_file(mammals_file, "data/MAMMALS_TERRESTRIAL_ONLY/MAMMALS_TERRESTRIAL_ONLY.shp"),
+  
   # geodata::worldclim_global(var = "bio", res = 0.5, path = "data/")
   tar_file(bio1_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_1.tif"),
   tar_file(bio4_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_4.tif"),
@@ -78,7 +80,10 @@ data_processing_targets <- tar_plan(
     pull(name),
   
   occs_ENM = occs_thinned %>% 
-    filter(name %in% species_for_enm)
+    filter(name %in% species_for_enm),
+  
+  iucn_ranges = terra::wrap(get_iucn(IUCN_data = mammals_file, 
+                                     species = species_for_enm))
 
 )
 
@@ -86,18 +91,30 @@ data_processing_targets <- tar_plan(
 ## Analysis
 analysis_targets <- tar_plan(
   
-  e_Misc = build_sdm(species = "Miniopterus schreibersii", occs = occs_ENM, env_stack),
-  # e_Mybl = build_sdm(species = "Myotis blythii", occs = occs_ENM, env_stack),
-  # e_Myem = build_sdm(species = "Myotis emarginatus", occs = occs_ENM, env_stack),
-  # e_Mymy = build_sdm(species = "Myotis myotis", occs = occs_ENM, env_stack),
-  # e_Piku = build_sdm(species = "Pipistrellus kuhlii", occs = occs_ENM, env_stack),
-  # e_Rhbl = build_sdm(species = "Rhinolophus blasii", occs = occs_ENM, env_stack),
-  # e_Rheu = build_sdm(species = "Rhinolophus euryale", occs = occs_ENM, env_stack),
-  # e_Rhfe = build_sdm(species = "Rhinolophus ferrumequinum", occs = occs_ENM, env_stack),
-  # e_Rhmi = build_sdm(species = "Rhinopoma microphyllum", occs = occs_ENM, env_stack),
-  # e_Roae = build_sdm(species = "Rousettus aegyptiacus", occs = occs_ENM, env_stack),
-  # e_Role = build_sdm(species = "Rousettus leschenaultii", occs = occs_ENM, env_stack),
-  # e_Sche = build_sdm(species = "Scotophilus heathii", occs = occs_ENM, env_stack)
+  e_Misc = build_sdm(species = "Miniopterus schreibersii", occs = occs_ENM,
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Mybl = build_sdm(species = "Myotis blythii", occs = occs_ENM, iucn_ranges, 
+                     env_stack, n_bg = 10000),
+  e_Myem = build_sdm(species = "Myotis emarginatus", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Mymy = build_sdm(species = "Myotis myotis", occs = occs_ENM, iucn_ranges, 
+                     env_stack, n_bg = 10000),
+  e_Piku = build_sdm(species = "Pipistrellus kuhlii", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Rhbl = build_sdm(species = "Rhinolophus blasii", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Rheu = build_sdm(species = "Rhinolophus euryale", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Rhfe = build_sdm(species = "Rhinolophus ferrumequinum", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Rhmi = build_sdm(species = "Rhinopoma microphyllum", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Roae = build_sdm(species = "Rousettus aegyptiacus", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Role = build_sdm(species = "Rousettus leschenaultii", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Sche = build_sdm(species = "Scotophilus heathii", occs = occs_ENM, 
+                     iucn_ranges, env_stack, n_bg = 10000)
 )
 
 ## Outputs

@@ -2,18 +2,21 @@
 #'
 #'
 #' @title build_sdm
-#' @param species character, scientific name
+#' @param species character, scientific name for one species
 #' @param occs all species locations
+#' @param iucn_ranges trimmed SpatVector for all focal species
 #' @param env_stack SpatRaster of all predictor variables
+#' @param n_bg number of background points
 #' @param seed Seed to ensure replication in random sampling of background pts
 #' @return 
 #' @author Cecilia Sanchez
 #' @example
-#' build_sdm(species = "Myotis myotis", occs = occs_ENM, env_stack)
+#' build_sdm(species = "Myotis myotis", ccs = occs_ENM, iucn_ranges, env_stack, n_bg = 500)
 
-build_sdm <- function(species, occs, env_stack, seed = 42){
+build_sdm <- function(species, occs, iucn_ranges, env_stack, n_bg, seed = 42){
   
   env_stack <- terra::rast(env_stack)
+  iucn_ranges <- terra::vect(iucn_ranges)
   
   # subset all occurrence points to those of the focal species
   occs_species <- occs %>% 
@@ -33,7 +36,7 @@ build_sdm <- function(species, occs, env_stack, seed = 42){
   envs_mask <- terra::crop(env_stack, occs_buff, mask = T) 
   
   # sample background (pseudo absence) points within the buffered hull
-  bg_xy <- terra::spatSample(envs_mask, 10000, xy = T, values = F, na.rm = T)
+  bg_xy <- terra::spatSample(envs_mask, n_bg, xy = T, values = F, na.rm = T)
   # convert matrix output to data frame
   bg_xy <- as.data.frame(bg_xy)
   colnames(bg_xy) <- c("longitude", "latitude")
@@ -50,7 +53,7 @@ build_sdm <- function(species, occs, env_stack, seed = 42){
   
   # build and evaluate environmental niche model
   # iterate model building over all chosen parameter settings
-  # can take a few min depending on number of points
+  # can take a while depending on number of points
   e <- ENMeval::ENMevaluate(occs = occs_xy, envs = envs_mask, bg = bg_xy, 
                             # feature classes and regularization multipliers
                             # fcs are linear, quadratic, hinge, product
@@ -62,6 +65,46 @@ build_sdm <- function(species, occs, env_stack, seed = 42){
                                             bg.grp = bg.grp),
                             categoricals = c("karst"))
   
+  # Select optimal model using "a sequential method that uses cross-validation 
+  # results by selecting models with the lowest average test omission rate, and 
+  # to break ties, with the highest average validation AUC (Radosavljevic & Anderson 2014)"
+  # https://jamiemkass.github.io/ENMeval/articles/ENMeval-2.0-vignette.html#select
+  opt_mod <- e@results %>% 
+    filter(or.10p.avg == min(or.10p.avg)) %>% 
+    filter(auc.val.avg == max(auc.val.avg))
+  
+  best_mod_name <- paste0("fc.", opt_mod$fc, "_rm.", opt_mod$rm)
+  best_mod <- e@models[[best_mod_name]]
+  
+  print(paste0("Optimal model for ", species, ": ", best_mod_name))
+  print(paste("AUC.val.avg =", round(opt_mod$auc.val.avg, 2)))
+  
+  
+  # IUCN range of the species as an extent to project the SDM to
+  species_range <- subset(iucn_ranges, iucn_ranges[[2]] == species)
+
+  #iucn_range <- terra::project(iucn_range, "+proj=longlat +ellps=WGS84 +no_defs") 
+
+  # crop and mask the environmental stack by the species IUCN range
+  pred_proj <- terra::crop(env_stack, species_range, mask = T)
+  # predict values within this range
+  species_preds <- dismo::predict(best_mod, pred_proj, 
+                                  args = c("outputformat=cloglog"))
+  
+  # save raster of predictions 
+  writeRaster(species_preds, paste0("outputs/full_", species, ".tif"),
+              overwrite = TRUE)
+  
+  # binary output based on 75% probability thresholds (IUCN range constrained)
+  if(max(values(species_preds), na.rm = T) >= 0.75){
+    preds75 <- species_preds
+    preds75[preds75 >= 0.75] <- 1
+    preds75[preds75 < 0.75] <- NA
+    writeRaster(preds75, paste0("outputs/binary_", species, "_75.tif"),
+                overwrite = TRUE)
+  }else(print("No areas have >= 75% predicted probability of presence"))
+  
+  
   return(e)
   
 }
@@ -71,4 +114,7 @@ build_sdm <- function(species, occs, env_stack, seed = 42){
 # occs <- occs_ENM
 # tar_load(env_stack)
 # env_stack <- terra::rast(env_stack)
+# tar_load(iucn_ranges)
+# iucn_ranges <- terra::vect(iucn_ranges)
+# n_bg = 500
 # seed <- 42
