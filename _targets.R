@@ -119,9 +119,8 @@ analysis_targets <- tar_plan(
 
 ## Outputs
 outputs_targets <- tar_plan(
-  ## This is a placeholder for any targets that produces outputs such as
-  ## tables of model outputs, plots, etc. Delete or keep empty if you will not
-  ## produce any of these types of outputs
+
+  multipanel = map_predicted_distributions()
 )
 
 
@@ -136,28 +135,6 @@ report_targets <- tar_plan(
   # )
 )
 
-## Deploy targets
-deploy_targets <- tar_plan(
-  ## This is a placeholder for any targets that are meant to deploy reports or
-  ## any outputs externally e.g., website, Google Cloud Storage, Amazon Web
-  ## Services buckets, etc. Delete or keep empty if you will not perform any
-  ## deployments. The aws_s3_upload function requires AWS credentials to be loaded
-  ## but will print a warning and do nothing if not
-  
-  # html_files = containerTemplateUtils::get_file_paths(tar_obj = example_report,
-  #                                                     pattern = "\\.html$"),
-  # uploaded_report = containerTemplateUtils::aws_s3_upload(html_files,
-  #                                                       bucket = Sys.getenv("AWS_BUCKET"),
-  #                                                       error = FALSE,
-  #                                                       file_type = "html"),
-  # email_updates= 
-  #   containerTemplateUtils::send_email_update(
-  #     to = strsplit(Sys.getenv("EMAIL_RECIPIENTS"),";")[[1]],
-  #     from = Sys.getenv("EMAIL_SENDER"),
-  #     project_name = "My Project",
-  #     attach = TRUE
-  #   )
-)
 
 # List targets -----------------------------------------------------------------
 
@@ -166,6 +143,5 @@ list(
   data_processing_targets,
   analysis_targets,
   outputs_targets,
-  report_targets,
-  deploy_targets
+  report_targets
 )

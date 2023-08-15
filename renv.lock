@@ -363,6 +363,19 @@
         "rlang"
       ]
     },
+    "cowplot": {
+      "Package": "cowplot",
+      "Version": "1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b418e8423699d11c7f2087c2bfd07da2",
+      "Requirements": [
+        "ggplot2",
+        "gtable",
+        "rlang",
+        "scales"
+      ]
+    },
     "cpp11": {
       "Package": "cpp11",
       "Version": "0.4.5",
@@ -709,6 +722,16 @@
       "Repository": "CRAN",
       "Hash": "15e9634c0fcd294799e9b2e929ed1b86",
       "Requirements": []
+    },
+    "geodata": {
+      "Package": "geodata",
+      "Version": "0.5-8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "93d238706f3fe7c326a7d0bbc2fecdb8",
+      "Requirements": [
+        "terra"
+      ]
     },
     "geosphere": {
       "Package": "geosphere",
@@ -2116,6 +2139,26 @@
         "rlang",
         "vctrs",
         "withr"
+      ]
+    },
+    "tidyterra": {
+      "Package": "tidyterra",
+      "Version": "0.4.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c50e45d8fd32d10e40ff6d9f03e22249",
+      "Requirements": [
+        "cli",
+        "data.table",
+        "dplyr",
+        "ggplot2",
+        "magrittr",
+        "rlang",
+        "scales",
+        "sf",
+        "terra",
+        "tibble",
+        "tidyr"
       ]
     },
     "tidyverse": {
