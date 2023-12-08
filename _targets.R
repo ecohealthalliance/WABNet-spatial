@@ -26,18 +26,11 @@ data_input_targets <- tar_plan(
   
   tar_file(mammals_file, "data/MAMMALS_TERRESTRIAL_ONLY/MAMMALS_TERRESTRIAL_ONLY.shp"),
   
-  # geodata::worldclim_global(var = "bio", res = 0.5, path = "data/")
-  tar_file(bio1_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_1.tif"),
-  tar_file(bio4_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_4.tif"),
-  tar_file(bio12_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_12.tif"),
-  tar_file(bio15_30s_file, "data/wc2.1_30s/wc2.1_30s_bio_15.tif"),
-  
   #geodata::worldclim_global(var = "bio", res = 2.5, path = "data/")
   tar_file(bio1_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_1.tif"),
   tar_file(bio4_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_4.tif"),
   tar_file(bio12_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_12.tif"),
   tar_file(bio15_2.5m_file, "data/wc2.1_2.5m/wc2.1_2.5m_bio_15.tif"),
-  
   
   # https://figshare.com/articles/dataset/Harmonization_of_DMSP_and_VIIRS_nighttime_light_data_from_1992-2018_at_the_global_scale/9828827/7
   tar_file(ntl_file, "data/Harmonized_DN_NTL_2021_simVIIRS.tif"),
@@ -54,12 +47,6 @@ data_input_targets <- tar_plan(
 
 ## Data processing
 data_processing_targets <- tar_plan(
-  
-  # 30s resolution
-  # warning: creates a 11+gb raster
-  # env_stack = terra::wrap(make_stack(bio1_30s_file, bio4_30s_file, 
-  #                                    bio12_30s_file, bio15_30s_file, karst_file, 
-  #                                    ntl_file)),
   
   # 2.5 min resolution
   env_stack = terra::wrap(make_stack(bio1_2.5m_file, bio4_2.5m_file,
