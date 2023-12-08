@@ -41,7 +41,10 @@ data_input_targets <- tar_plan(
   
   CoV_species = read.csv(CoV_species_file, na.strings = c("NA", "n/a")),
   WABNet_coords = read.csv(WABNet_coords_file, na.strings = c("NA", "n/a")),
-  darkcides = read.csv(darkcides_file, na.strings = c("N/A"))
+  darkcides = read.csv(darkcides_file, na.strings = c("N/A")),
+  
+  tar_file(CoV_prev_file, "data/WABNet_CoV_prevalence_01December2023.csv"),
+  CoV_prev = read.csv(CoV_prev_file, na.strings = "")
 )
 
 
@@ -70,7 +73,9 @@ data_processing_targets <- tar_plan(
     filter(name %in% species_for_enm),
   
   iucn_ranges = terra::wrap(get_iucn(IUCN_data = mammals_file, 
-                                     species = species_for_enm))
+                                     species = species_for_enm)),
+  
+  heat_data = prep_quarterly_heatmap_data(CoV_prev)
 
 )
 
@@ -107,7 +112,8 @@ analysis_targets <- tar_plan(
 ## Outputs
 outputs_targets <- tar_plan(
 
-  multipanel = map_predicted_distributions()
+  multipanel = map_predicted_distributions(),
+  quarterly_heatmap = plot_quarterly_heatmap(heat_data)
 )
 
 
