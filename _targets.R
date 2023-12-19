@@ -19,7 +19,7 @@ tar_option_set(
 
 ## Data input
 data_input_targets <- tar_plan(
-  tar_file(CoV_species_file, "data/Habitat info - CoV+ Western Asia bat species - updated 29 June 2023.csv"),
+  tar_file(CoV_species_file, "data/Habitat info - CoV+ Western Asia bat species - updated 11 Dec 2023.csv"),
   tar_file(WABNet_coords_file, "data/GPS coordinates for WABNet captured species.csv"),
   # https://figshare.com/articles/dataset/Metadata_for_DarkCideS_1_0_a_global_database_for_bats_in_karsts_and_caves/16413405?file=34091939
   tar_file(darkcides_file, "data/DarkCideS_v4_dataset 2.csv"),
@@ -57,6 +57,7 @@ data_processing_targets <- tar_plan(
                                      karst_file, ntl_file)),
     
   CoV_species_names = CoV_species$Species,
+  # takes a couple hours
   occs_df = get_occs(species_names = CoV_species_names, 
                      sources = c("gbif", "vertnet"), 
                      limit = 30000),
@@ -82,30 +83,35 @@ data_processing_targets <- tar_plan(
 
 ## Analysis
 analysis_targets <- tar_plan(
-  
+  e_Hysa = build_sdm(species = "Hypsugo savii", occs = occs_ENM,
+                     iucn_ranges, env_stack, n_bg = 10000),
   e_Misc = build_sdm(species = "Miniopterus schreibersii", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Mybl = build_sdm(species = "Myotis blythii", occs = occs_ENM, iucn_ranges, 
+  e_Mybl = build_sdm(species = "Myotis blythii", occs = occs_ENM, iucn_ranges,
                      env_stack, n_bg = 10000),
-  e_Myem = build_sdm(species = "Myotis emarginatus", occs = occs_ENM, 
+  e_Myem = build_sdm(species = "Myotis emarginatus", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Mymy = build_sdm(species = "Myotis myotis", occs = occs_ENM, iucn_ranges, 
+  e_Mymy = build_sdm(species = "Myotis myotis", occs = occs_ENM, iucn_ranges,
                      env_stack, n_bg = 10000),
-  e_Piku = build_sdm(species = "Pipistrellus kuhlii", occs = occs_ENM, 
+  e_Pija = build_sdm(species = "Pipistrellus javanicus", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Rhbl = build_sdm(species = "Rhinolophus blasii", occs = occs_ENM, 
+  e_Piku = build_sdm(species = "Pipistrellus kuhlii", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Rheu = build_sdm(species = "Rhinolophus euryale", occs = occs_ENM, 
+  e_Plma = build_sdm(species = "Plecotus macrobullaris", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Rhfe = build_sdm(species = "Rhinolophus ferrumequinum", occs = occs_ENM, 
+  e_Rhbl = build_sdm(species = "Rhinolophus blasii", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Rhmi = build_sdm(species = "Rhinopoma microphyllum", occs = occs_ENM, 
+  e_Rheu = build_sdm(species = "Rhinolophus euryale", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Roae = build_sdm(species = "Rousettus aegyptiacus", occs = occs_ENM, 
+  e_Rhfe = build_sdm(species = "Rhinolophus ferrumequinum", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Role = build_sdm(species = "Rousettus leschenaultii", occs = occs_ENM, 
+  e_Rhmi = build_sdm(species = "Rhinopoma microphyllum", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000),
-  e_Sche = build_sdm(species = "Scotophilus heathii", occs = occs_ENM, 
+  e_Roae = build_sdm(species = "Rousettus aegyptiacus", occs = occs_ENM,
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Role = build_sdm(species = "Rousettus leschenaultii", occs = occs_ENM,
+                     iucn_ranges, env_stack, n_bg = 10000),
+  e_Sche = build_sdm(species = "Scotophilus heathii", occs = occs_ENM,
                      iucn_ranges, env_stack, n_bg = 10000)
 )
 
@@ -116,25 +122,11 @@ outputs_targets <- tar_plan(
   quarterly_heatmap = plot_quarterly_heatmap(heat_data)
 )
 
-
-## Report
-report_targets <- tar_plan(
-  ## Example Rmarkdown report target/s; delete and replace with your own
-  ## Rmarkdown report target/s
-  
-  # tar_render(
-  #   example_report, path = "reports/example_report.Rmd", 
-  #   output_dir = "outputs", knit_root_dir = here::here()
-  # )
-)
-
-
 # List targets -----------------------------------------------------------------
 
 list(
   data_input_targets,
   data_processing_targets,
   analysis_targets,
-  outputs_targets,
-  report_targets
+  outputs_targets
 )

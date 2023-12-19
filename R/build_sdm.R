@@ -21,8 +21,8 @@ build_sdm <- function(species, occs, iucn_ranges, env_stack, n_bg, seed = 42){
   # subset all occurrence points to those of the focal species
   occs_species <- occs %>% 
     filter(name == species)
-  occs_sf <- st_as_sf(occs_species, coords = c("longitude", "latitude"),
-                      crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+  occs_sf <- sf::st_as_sf(occs_species, coords = c("longitude", "latitude"),
+                          crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
   occs_xy <- occs_species[, c("longitude", "latitude")]
   
   # build convex hull around focal species points
